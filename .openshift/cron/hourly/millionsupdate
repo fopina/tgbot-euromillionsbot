@@ -1,0 +1,3 @@
+#!/bin/bash
+
+$OPENSHIFT_REPO_DIR/millionsbot.py -d postgresql://$OPENSHIFT_POSTGRESQL_DB_HOST:$OPENSHIFT_POSTGRESQL_DB_PORT/$PGDATABASE -t $TGTOKEN --cron millions.update ""
