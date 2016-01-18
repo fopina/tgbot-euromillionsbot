@@ -13,15 +13,16 @@ class EuromillionsPlugin(TGPluginBase):
     def last(self, message, text):
         self.bot.send_chat_action(message.chat.id, ChatAction.TEXT)
         d = self.read_data('results', 'latest')
-        self.bot.send_message(
-            message.chat.id, u'''\
+        if d:
+            self.bot.send_message(
+                message.chat.id, u'''\
 Latest results _%s_
 \U0001F3BE
 *%s*
 \U00002B50
-*%s* ''' % (d['date'], d['numbers'], d['stars']),
-            parse_mode='Markdown'
-        )
+*%s*''' % (d['date'], d['numbers'], d['stars']),
+                parse_mode='Markdown'
+            )
 
     def cron_go(self, action, *args):
         if action == 'millions.populate':

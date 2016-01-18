@@ -14,8 +14,18 @@ class EuromillionsPluginTest(plugintest.PluginTestCase):
         self.received_id = 1
 
     def test_last(self):
+        self.plugin.save_data('results', key2='latest', obj={
+            "date": "2005-01-01",
+            "numbers": "hello",
+            "stars": "world"
+        })
         self.receive_message('/last')
-        self.assertReplied(self.bot, 'test')
+        self.assertReplied(self.bot, u'''\
+Latest results _2005-01-01_
+\U0001F3BE
+*hello*
+\U00002B50
+*world*''')
 
     def test_cron_populate(self):
         import mock
