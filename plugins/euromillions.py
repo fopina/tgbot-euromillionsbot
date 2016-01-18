@@ -8,21 +8,35 @@ class EuromillionsPlugin(TGPluginBase):
     def list_commands(self):
         return (
             TGCommandBase('last', self.last, 'Last Euromillions result'),
+            TGCommandBase('alertson', self.alertson, '', printable=False),
+            TGCommandBase('alertsoff', self.alertsoff, '', printable=False),
         )
 
     def last(self, message, text):
-        self.bot.send_chat_action(message.chat.id, ChatAction.TEXT)
+        return self._last(message.chat.id)
+
+    def _last(self, chat):
+        self.bot.send_chat_action(chat, ChatAction.TEXT)
         d = self.read_data('results', 'latest')
         if d:
-            self.bot.send_message(
-                message.chat.id, u'''\
+            return self.bot.send_message(
+                chat,
+                u'''\
 Latest results _%s_
 \U0001F3BE
 *%s*
 \U00002B50
 *%s*''' % (d['date'], d['numbers'], d['stars']),
                 parse_mode='Markdown'
-            )
+            ).wait()
+
+    def alertson(self, message, text):
+        self.save_data(message.chat.id, obj=True)
+        self.bot.send_message(message.chat.id, 'Alerts enabled')
+
+    def alertsoff(self, message, text):
+        self.save_data(message.chat.id, obj=False)
+        self.bot.send_message(message.chat.id, 'Alerts disabled')
 
     def cron_go(self, action, *args):
         if action == 'millions.populate':
@@ -53,4 +67,19 @@ Latest results _%s_
 
         r = requests.get('https://nunofcguerreiro.com/api-euromillions-json')
         d = r.json()['drawns'][0]
-        self.save_data('results', 'latest', obj=d)
+        old = self.read_data('results', 'latest')
+        self.save_data('results', key2='latest', obj=d)
+
+        if old == d:
+            return
+
+        for chat in self.iter_data_keys():
+            if chat == 'results':
+                continue
+            if self.read_data(chat):
+                print "Sending message to %s" % chat
+                time_start = time.time()
+                r = self._last(chat)
+                time_taken = time.time() - time_start
+                if time_taken < 0.5:  # pragma: no cover
+                    time.sleep(0.5 - time_taken)
