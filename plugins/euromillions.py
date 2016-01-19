@@ -1,6 +1,6 @@
 # coding=utf-8
 from tgbot.pluginbase import TGPluginBase, TGCommandBase
-from tgbot.tgbot import ChatAction
+from tgbot.tgbot import ChatAction, ReplyKeyboardMarkup
 import requests
 
 
@@ -8,9 +8,32 @@ class EuromillionsPlugin(TGPluginBase):
     def list_commands(self):
         return (
             TGCommandBase('last', self.last, 'Last Euromillions result'),
+            TGCommandBase('alerts', self.alerts, 'Result alerts'),
             TGCommandBase('alertson', self.alertson, '', printable=False),
             TGCommandBase('alertsoff', self.alertsoff, '', printable=False),
         )
+
+    def build_menu(self, chat):
+        if chat.type == 'private':
+            return ReplyKeyboardMarkup.create(
+                keyboard=[
+                    ['Last Results'],
+                    ['Disable Alerts' if self.read_data(chat.id) else 'Enable Alerts'],
+                ],
+                resize_keyboard=True,
+            )
+        else:
+            return None
+
+    def chat(self, message, text):
+        if message.chat.type != 'private':
+            return
+        if text == 'Last Results':
+            self._last(message.chat)
+        elif text == 'Enable Alerts':
+            self.alertson(message, text)
+        elif text == 'Disable Alerts':
+            self.alertsoff(message, text)
 
     def last(self, message, text):
         return self._last(message.chat.id)
@@ -30,13 +53,20 @@ Latest results _%s_
                 parse_mode='Markdown'
             ).wait()
 
+    def alerts(self, message, text):
+        alerts = self.read_data(message.chat.id)
+        self.bot.send_message(
+            message.chat.id,
+            'Alerts enabled, use /alertsoff to disable them' if alerts else 'Alerts disabled, use /alertson to enable them'
+        )
+
     def alertson(self, message, text):
         self.save_data(message.chat.id, obj=True)
-        self.bot.send_message(message.chat.id, 'Alerts enabled')
+        self.bot.send_message(message.chat.id, 'Alerts enabled', reply_markup=self.build_menu(message.chat))
 
     def alertsoff(self, message, text):
         self.save_data(message.chat.id, obj=False)
-        self.bot.send_message(message.chat.id, 'Alerts disabled')
+        self.bot.send_message(message.chat.id, 'Alerts disabled', reply_markup=self.build_menu(message.chat))
 
     def cron_go(self, action, *args):
         if action == 'millions.populate':
@@ -68,10 +98,11 @@ Latest results _%s_
         r = requests.get('https://nunofcguerreiro.com/api-euromillions-json')
         d = r.json()['drawns'][0]
         old = self.read_data('results', 'latest')
-        self.save_data('results', key2='latest', obj=d)
 
         if old == d:
             return
+
+        self.save_data('results', key2='latest', obj=d)
 
         for chat in self.iter_data_keys():
             if chat == 'results':

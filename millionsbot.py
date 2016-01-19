@@ -9,18 +9,21 @@ urllib3.disable_warnings()
 
 
 def setup(db_url=None, token=None):
+    mp = euromillions.EuromillionsPlugin()
     tg = tgbot.TGBot(
         token,
         plugins=[
-            euromillions.EuromillionsPlugin(),
+            mp,
             intro.IntroPlugin(
                 intro_text='''\
 _Do not forget to rate me!_
 https://telegram.me/storebot?start=euromillionsbot
             ''',
-                markdown=True
+                markdown=True,
+                start_menu_builder=mp.build_menu,
             ),
         ],
+        no_command=mp,
         db_url=db_url,
     )
     return tg

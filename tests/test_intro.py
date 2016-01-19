@@ -1,6 +1,6 @@
 # coding=utf-8
 from tgbot import plugintest
-from tgbot.botapi import Update
+from tgbot.botapi import Update, ReplyKeyboardMarkup
 from plugins.intro import IntroPlugin
 
 
@@ -14,13 +14,18 @@ class IntroPluginTest(plugintest.PluginTestCase):
         self.receive_message('/start')
         self.assertReplied(self.bot, 'Hello!')
 
-    def test_start_world(self):
+    def test_start_world_with_menu(self):
+        def menu(chat):
+            return ReplyKeyboardMarkup.create(keyboard=[['One']])
+
         self.bot = self.fake_bot(
             '',
-            plugins=[IntroPlugin(intro_text='World!')]
+            plugins=[IntroPlugin(intro_text='World!', start_menu_builder=menu)]
         )
         self.received_id = 1
         self.receive_message('/start')
+
+        # TODO: update tgbotplug plugintest to allow validation of reply_markup
         self.assertReplied(self.bot, 'World!')
 
     def receive_message(self, text, sender=None, chat=None):
