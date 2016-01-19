@@ -11,8 +11,19 @@ class IntroPlugin(TGPluginBase):
 
     def list_commands(self):
         return (
-            TGCommandBase('start', self.start, 'Introduction', printable=False),
+            TGCommandBase('start', self.start, 'introduction', printable=False),
+            TGCommandBase('help', self.help, 'help', printable=False),
         )
+
+    def help(self, message, text):
+        msg = 'You can control me by sending these commands:\n\n'
+
+        cmds = self.bot.list_commands()
+        for ck in cmds:
+            if ck.printable:
+                msg += '/%s\n' % ck
+
+        self.bot.send_message(message.chat.id, msg)
 
     def start(self, message, text):
         keyb = None

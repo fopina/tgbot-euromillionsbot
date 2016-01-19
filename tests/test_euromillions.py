@@ -7,7 +7,7 @@ from requests.packages import urllib3
 urllib3.disable_warnings()
 
 
-class EuromillionsPluginTest(plugintest.PluginTestCase):
+class PluginTest(plugintest.PluginTestCase):
     def setUp(self):
         self.plugin = EuromillionsPlugin()
         self.bot = self.fake_bot('', plugins=[self.plugin], no_command=self.plugin)

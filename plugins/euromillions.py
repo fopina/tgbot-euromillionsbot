@@ -10,9 +10,9 @@ class EuromillionsPlugin(TGPluginBase):
 
     def list_commands(self):
         return (
-            TGCommandBase('last', self.last, 'Last Euromillions results'),
-            TGCommandBase('alerts', self.alerts, 'Receive an alert when new results are announced'),
-            TGCommandBase('results', self.results, 'Euromillions results for a specific date'),
+            TGCommandBase('last', self.last, 'last Euromillions results'),
+            TGCommandBase('alerts', self.alerts, 'receive an alert when new results are announced'),
+            TGCommandBase('results', self.results, 'euromillions results for a specific date'),
             TGCommandBase('alertson', self.alertson, '', printable=False),
             TGCommandBase('alertsoff', self.alertsoff, '', printable=False),
         )
