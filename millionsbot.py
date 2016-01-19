@@ -16,6 +16,10 @@ def setup(db_url=None, token=None):
             mp,
             intro.IntroPlugin(
                 intro_text='''\
+Use the options in the menu.
+
+If you enable alerts, I'll update you when new results are announced.
+
 _Do not forget to rate me!_
 https://telegram.me/storebot?start=euromillionsbot
             ''',
