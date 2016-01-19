@@ -15,7 +15,7 @@ class EuromillionsPluginTest(plugintest.PluginTestCase):
 
     def test_last(self):
         self.receive_message('/last')
-        self.assertReplied(self.bot, 'No results sorry...')
+        self.assertReplied(self.bot, 'No results for `latest`...')
 
         self.plugin.save_data('results', key2='latest', obj={
             "date": "2005-01-01",
@@ -24,7 +24,7 @@ class EuromillionsPluginTest(plugintest.PluginTestCase):
         })
         self.receive_message('/last')
         self.assertReplied(self.bot, u'''\
-Latest results _2005-01-01_
+Latest Results for _2005-01-01_
 \U0001F3BE
 *hello*
 \U00002B50
@@ -172,7 +172,7 @@ Results for _2015-01-01_
             }
         )
         self.assertReplied(self.bot, u'''\
-Latest results _2005-01-01_
+Latest Results for _2005-01-01_
 \U0001F3BE
 *10 19 38 43 46*
 \U00002B50
@@ -194,9 +194,13 @@ Latest results _2005-01-01_
             "numbers": "hello",
             "stars": "world"
         })
+        self.plugin.save_data('results', key2='2005-01-01', obj={
+            "numbers": "hello",
+            "stars": "world"
+        })
         self.receive_message('Last Results')
         self.assertReplied(self.bot, u'''\
-Latest results _2005-01-01_
+Latest Results for _2005-01-01_
 \U0001F3BE
 *hello*
 \U00002B50
@@ -205,6 +209,19 @@ Latest results _2005-01-01_
         self.assertReplied(self.bot, u'Alerts enabled')
         self.receive_message('Disable Alerts')
         self.assertReplied(self.bot, u'Alerts disabled')
+        self.receive_message('Previous Results')
+        self.assertReplied(self.bot, u'Please enter the date in the format `YEAR-MM-DD`')
+        self.receive_message('whatever')
+        self.assertReplied(self.bot, u'Please *use* the format `YEAR-MM-DD`')
+        self.receive_message('2005-01-02')
+        self.assertReplied(self.bot, u'No results for `2005-01-02`...')
+        self.receive_message('2005-01-01')
+        self.assertReplied(self.bot, u'''\
+Results for _2005-01-01_
+\U0001F3BE
+*hello*
+\U00002B50
+*world*''')
 
     def receive_message(self, text, sender=None, chat=None):
         if sender is None:

@@ -1,6 +1,6 @@
 # coding=utf-8
 from tgbot.pluginbase import TGPluginBase, TGCommandBase
-from tgbot.tgbot import ChatAction, ReplyKeyboardMarkup, ForceReply
+from tgbot.tgbot import ChatAction, ReplyKeyboardMarkup, ForceReply, ReplyKeyboardHide
 import requests
 import re
 
@@ -11,7 +11,7 @@ class EuromillionsPlugin(TGPluginBase):
     def list_commands(self):
         return (
             TGCommandBase('last', self.last, 'Last Euromillions results'),
-            TGCommandBase('alerts', self.alerts, 'Result alerts'),
+            TGCommandBase('alerts', self.alerts, 'Receive an alert when new results are announced'),
             TGCommandBase('results', self.results, 'Euromillions results for specific date'),
             TGCommandBase('alertson', self.alertson, '', printable=False),
             TGCommandBase('alertsoff', self.alertsoff, '', printable=False),
@@ -22,22 +22,40 @@ class EuromillionsPlugin(TGPluginBase):
             return ReplyKeyboardMarkup.create(
                 keyboard=[
                     ['Last Results'],
+                    ['Previous Results'],
                     ['Disable Alerts' if self.read_data(chat.id) else 'Enable Alerts'],
                 ],
                 resize_keyboard=True,
             )
-        else:
-            return None
 
     def chat(self, message, text):
         if message.chat.type != 'private':
             return
         if text == 'Last Results':
             self._last(message.chat)
+        elif text == 'Previous Results':
+            self.bot.send_message(
+                message.chat.id,
+                'Please enter the date in the format `YEAR-MM-DD`',
+                parse_mode='Markdown',
+                reply_markup=ReplyKeyboardHide.create()
+            )
         elif text == 'Enable Alerts':
             self.alertson(message, text)
         elif text == 'Disable Alerts':
             self.alertsoff(message, text)
+        elif not text:
+            return
+        else:
+            res = 'Please *use* the format `YEAR-MM-DD`'
+            if self.DATE_RE.match(text):
+                res = self._results(text)
+            self.bot.send_message(
+                message.chat.id,
+                res,
+                parse_mode='Markdown',
+                reply_markup=self.build_menu(message.chat)
+            )
 
     def results(self, message, text):
         self.bot.send_chat_action(message.chat.id, ChatAction.TEXT)
@@ -63,45 +81,43 @@ class EuromillionsPlugin(TGPluginBase):
             self.need_reply(self.results, message, out_message=m, selective=True)
             return
 
-        d = self.read_data('results', text)
-        if d:
-            res = u'''\
-Results for _%s_
+        self.bot.send_message(
+            message.chat.id,
+            self._results(text),
+            parse_mode='Markdown'
+        ).wait()
+
+    def _results(self, entry='latest'):
+        d = self.read_data('results', entry)
+
+        if not d:
+            return 'No results for `%s`...' % entry
+
+        dt = entry
+        if dt == 'latest':
+            dt = d['date']
+
+        return u'''\
+%sResults for _%s_
 \U0001F3BE
 *%s*
 \U00002B50
-*%s*''' % (text, d['numbers'], d['stars'])
-        else:
-            res = 'No results for `%s`...' % text
-
-        self.bot.send_message(
-            message.chat.id,
-            res,
-            parse_mode='Markdown'
-        ).wait()
+*%s*''' % (
+            'Latest ' if entry == 'latest' else '',
+            dt,
+            d['numbers'],
+            d['stars']
+        )
 
     def last(self, message, text):
         return self._last(message.chat.id)
 
     def _last(self, chat):
         self.bot.send_chat_action(chat, ChatAction.TEXT)
-        d = self.read_data('results', 'latest')
-        if d:
-            return self.bot.send_message(
-                chat,
-                u'''\
-Latest results _%s_
-\U0001F3BE
-*%s*
-\U00002B50
-*%s*''' % (d['date'], d['numbers'], d['stars']),
-                parse_mode='Markdown'
-            ).wait()
-        else:
-            return self.bot.send_message(
-                chat,
-                'No results sorry...'
-            ).wait()
+        return self.bot.send_message(
+            chat,
+            self._results()
+        ).wait()
 
     def alerts(self, message, text):
         alerts = self.read_data(message.chat.id)

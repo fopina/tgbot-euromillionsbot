@@ -53,7 +53,7 @@ class WebTest(plugintest.PluginTestCase):
         self.assertEqual(FakeTelegramBotRPCRequest.QUEUE[-1][0], 'sendMessage')
         self.assertEqual(
             FakeTelegramBotRPCRequest.QUEUE[-1][1]['reply_markup'],
-            '{"resize_keyboard": true, "keyboard": [["Last Results"], ["Enable Alerts"]]}'
+            '{"resize_keyboard": true, "keyboard": [["Last Results"], ["Previous Results"], ["Enable Alerts"]]}'
         )
 
     def build_update(self, text, sender=None, chat=None, reply_to_message_id=None):
