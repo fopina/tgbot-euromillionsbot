@@ -1,6 +1,6 @@
 # coding=utf-8
 from tgbot.pluginbase import TGPluginBase, TGCommandBase
-from tgbot.tgbot import ChatAction, ReplyKeyboardMarkup, ForceReply, ReplyKeyboardHide
+from tgbot.tgbot import ChatAction, ReplyKeyboardMarkup, ForceReply, ReplyKeyboardHide, Error
 import requests
 import re
 
@@ -29,33 +29,30 @@ class EuromillionsPlugin(TGPluginBase):
             )
 
     def chat(self, message, text):
-        if message.chat.type != 'private':
-            return
-        if text == 'Last Results':
-            self._last(message.chat)
-        elif text == 'Previous Results':
-            self.bot.send_message(
-                message.chat.id,
-                'Please enter the date in the format `YEAR-MM-DD`',
-                parse_mode='Markdown',
-                reply_markup=ReplyKeyboardHide.create()
-            )
-        elif text == 'Enable Alerts':
-            self.alertson(message, text)
-        elif text == 'Disable Alerts':
-            self.alertsoff(message, text)
-        elif not text:
-            return
-        else:
-            res = 'Please *use* the format `YEAR-MM-DD`'
-            if self.DATE_RE.match(text):
-                res = self._results(text)
-            self.bot.send_message(
-                message.chat.id,
-                res,
-                parse_mode='Markdown',
-                reply_markup=self.build_menu(message.chat)
-            )
+        if message.chat.type == 'private':
+            if text == 'Last Results':
+                self._last(message.chat)
+            elif text == 'Previous Results':
+                self.bot.send_message(
+                    message.chat.id,
+                    'Please enter the date in the format `YEAR-MM-DD`',
+                    parse_mode='Markdown',
+                    reply_markup=ReplyKeyboardHide.create()
+                )
+            elif text == 'Enable Alerts':
+                self.alertson(message, text)
+            elif text == 'Disable Alerts':
+                self.alertsoff(message, text)
+            elif text:
+                res = 'Please *use* the format `YEAR-MM-DD`'
+                if self.DATE_RE.match(text):
+                    res = self._results(text)
+                self.bot.send_message(
+                    message.chat.id,
+                    res,
+                    parse_mode='Markdown',
+                    reply_markup=self.build_menu(message.chat)
+                )
 
     def results(self, message, text):
         self.bot.send_chat_action(message.chat.id, ChatAction.TEXT)
@@ -177,6 +174,12 @@ class EuromillionsPlugin(TGPluginBase):
                 print "Sending message to %s" % chat
                 time_start = time.time()
                 r = self._last(chat)
+                if isinstance(r, Error):  # pragma: no cover
+                    if r.error_code == 403:
+                        print '%s blocked bot' % chat
+                        self.save_data(chat, obj=False)
+                    else:
+                        print 'Error for', chat, ': ', r
                 time_taken = time.time() - time_start
                 if time_taken < 0.5:  # pragma: no cover
                     time.sleep(0.5 - time_taken)
