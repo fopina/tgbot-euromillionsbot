@@ -2,12 +2,12 @@
 from tgbot.pluginbase import TGPluginBase, TGCommandBase
 from tgbot.tgbot import ChatAction, ReplyKeyboardMarkup, ForceReply, ReplyKeyboardHide, Error
 import requests
-import re
 import random
+from datetime import datetime
 
 
 class EuromillionsPlugin(TGPluginBase):
-    DATE_RE = re.compile(r'\d{4}-\d\d-\d\d')
+    DATE_MASK = '%Y-%M-%d'
 
     def list_commands(self):
         return (
@@ -68,8 +68,10 @@ Use /help to find out what I can do.'''
                 self.alertsoff(message, text)
             elif text:
                 res = 'Please *use* the format `YEAR-MM-DD`'
-                if self.DATE_RE.match(text):
+                try:
                     res = self._results(text)
+                except:
+                    pass
                 self.bot.send_message(
                     message.chat.id,
                     res,
@@ -90,7 +92,13 @@ Use /help to find out what I can do.'''
             self.need_reply(self.results, message, out_message=m, selective=True)
             return
 
-        if not self.DATE_RE.match(text):
+        try:
+            self.bot.send_message(
+                message.chat.id,
+                self._results(text),
+                parse_mode='Markdown'
+            )
+        except:
             m = self.bot.send_message(
                 message.chat.id,
                 'Please *use* the format `YEAR-MM-DD`',
@@ -99,15 +107,14 @@ Use /help to find out what I can do.'''
                 parse_mode='Markdown'
             ).wait()
             self.need_reply(self.results, message, out_message=m, selective=True)
-            return
-
-        self.bot.send_message(
-            message.chat.id,
-            self._results(text),
-            parse_mode='Markdown'
-        ).wait()
 
     def _results(self, entry='latest'):
+        if entry != 'latest':
+            # let the parsing exception go...
+            dt = datetime.strptime(entry, self.DATE_MASK)
+            if dt > datetime.utcnow():
+                return 'I cannot foretell the future (at the moment?) but give /random a try...'
+
         d = self.read_data('results', entry)
 
         if not d:

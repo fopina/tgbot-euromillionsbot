@@ -43,6 +43,8 @@ Please use the format `YEAR-MM-DD`''')
         self.assertReplied(self.bot, u'Please *use* the format `YEAR-MM-DD`')
         self.receive_message('2015-01-02')
         self.assertReplied(self.bot, u'No results for `2015-01-02`...')
+        self.receive_message('2999-01-02')
+        self.assertReplied(self.bot, u'I cannot foretell the future (at the moment?) but give /random a try...')
         self.receive_message('/results 2015-01-01')
         self.assertReplied(self.bot, u'''\
 Results for _2015-01-01_
