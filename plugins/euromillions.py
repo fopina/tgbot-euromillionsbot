@@ -29,6 +29,24 @@ class EuromillionsPlugin(TGPluginBase):
             )
 
     def chat(self, message, text):
+        if (
+            message.chat.type == 'group' and
+            (
+                message.group_chat_created or
+                (
+                    message.new_chat_participant and message.new_chat_participant.username == self.bot.username
+                )
+            )
+        ):
+            self.bot.send_message(
+                message.chat.id,
+                '''\
+Thanks for inviting me over!
+
+Use /help to find out what I can do.'''
+            )
+            return
+
         if message.chat.type == 'private':
             if text == 'Last Results':
                 self._last(message.chat)

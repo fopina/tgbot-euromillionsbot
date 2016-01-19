@@ -4,9 +4,6 @@ from tgbot import plugintest, webserver, botapi
 import webtest
 import millionsbot
 
-import unittest
-import os
-
 
 class FakeTelegramBotRPCRequest(botapi.TelegramBotRPCRequest):
     # TODO - improve this and add it to tgbot.plugintest
@@ -32,6 +29,17 @@ class FakeTelegramBotRPCRequest(botapi.TelegramBotRPCRequest):
         if self.on_success is not None:
             self.on_success(self.result)
 
+    # overriding run() to prevent actual async calls to be able to assert async message sending
+    def run(self):
+        self._async_call()
+        return self
+
+    # same as above
+    def wait(self):
+        if self.error is not None:
+            return self.error
+        return self.result
+
 
 class WebTest(plugintest.PluginTestCase):
     def setUp(self):
@@ -49,11 +57,7 @@ class WebTest(plugintest.PluginTestCase):
         with self.assertRaisesRegexp(webtest.app.AppError, 'Bad response: 404 Not Found'):
             self.webapp.post_json('/update/invalid', params=self.build_update('hello'))
 
-    @unittest.skipIf(
-        os.environ.get('TRAVIS'),
-        "why does this fail on TRAVIS env?!"
-    )
-    def test_web(self):
+    def test_start(self):
         self.assertEqual(len(FakeTelegramBotRPCRequest.QUEUE), 0)
         self.webapp.post_json('/update/123', params=self.build_update(u'/start'))
         self.assertTrue(len(FakeTelegramBotRPCRequest.QUEUE))
@@ -62,6 +66,19 @@ class WebTest(plugintest.PluginTestCase):
             FakeTelegramBotRPCRequest.QUEUE[-1][1]['reply_markup'],
             '{"resize_keyboard": true, "keyboard": [["Last Results"], ["Previous Results"], ["Enable Alerts"]]}'
         )
+
+    def test_help(self):
+        self.assertEqual(len(FakeTelegramBotRPCRequest.QUEUE), 0)
+        self.webapp.post_json('/update/123', params=self.build_update(u'/help'))
+        self.assertTrue(len(FakeTelegramBotRPCRequest.QUEUE))
+        self.assertEqual(FakeTelegramBotRPCRequest.QUEUE[-1][0], 'sendMessage')
+        self.assertEqual(FakeTelegramBotRPCRequest.QUEUE[-1][1]['text'], '''\
+You can control me by sending these commands:
+
+/last - last Euromillions results
+/alerts - receive an alert when new results are announced
+/results - euromillions results for a specific date
+''')
 
     def build_update(self, text, sender=None, chat=None, reply_to_message_id=None):
         if sender is None:
