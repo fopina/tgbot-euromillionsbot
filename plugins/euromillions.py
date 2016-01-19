@@ -113,7 +113,8 @@ class EuromillionsPlugin(TGPluginBase):
         self.bot.send_chat_action(chat, ChatAction.TEXT)
         return self.bot.send_message(
             chat,
-            self._results()
+            self._results(),
+            parse_mode='Markdown'
         ).wait()
 
     def alerts(self, message, text):
