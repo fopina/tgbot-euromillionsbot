@@ -14,6 +14,9 @@ class EuromillionsPluginTest(plugintest.PluginTestCase):
         self.received_id = 1
 
     def test_last(self):
+        self.receive_message('/last')
+        self.assertReplied(self.bot, 'No results sorry...')
+
         self.plugin.save_data('results', key2='latest', obj={
             "date": "2005-01-01",
             "numbers": "hello",
@@ -26,6 +29,35 @@ Latest results _2005-01-01_
 *hello*
 \U00002B50
 *world*''')
+
+    def test_results(self):
+        self.plugin.save_data('results', key2='2015-01-01', obj={
+            "numbers": "hello",
+            "stars": "world"
+        })
+        self.receive_message('/results')
+        self.assertReplied(self.bot, u'''\
+For which date?
+Please use the format `YEAR-MM-DD`''')
+        self.receive_message('invalid format')
+        self.assertReplied(self.bot, u'Please *use* the format `YEAR-MM-DD`')
+        self.receive_message('2015-01-02')
+        self.assertReplied(self.bot, u'No results for `2015-01-02`...')
+        self.receive_message('/results 2015-01-01')
+        self.assertReplied(self.bot, u'''\
+Results for _2015-01-01_
+\U0001F3BE
+*hello*
+\U00002B50
+*world*''')
+
+    def test_alerts(self):
+        self.receive_message('/alerts')
+        self.assertReplied(self.bot, u'Alerts disabled, use /alertson to enable them')
+        self.receive_message('/alertson')
+        self.assertReplied(self.bot, u'Alerts enabled')
+        self.receive_message('/alertsoff')
+        self.assertReplied(self.bot, u'Alerts disabled')
 
     def test_cron_populate(self):
         import mock
@@ -100,6 +132,9 @@ Latest results _2005-01-01_
             }
             return r
 
+        # enable alerts for the test user
+        self.plugin.save_data('1', obj=True)
+
         # update on Monday (should do nothing)
         with mock.patch(
                 'time.gmtime',
@@ -108,10 +143,12 @@ Latest results _2005-01-01_
             with mock.patch('requests.get', fake_get):
                 self.plugin.cron_go('millions.update')
 
+        # assert latest was not set nor the test user received alert
         self.assertEqual(
             list(self.plugin.iter_data_key_keys('results')),
             []
         )
+        self.assertRaisesRegexp(AssertionError, 'No replies', self.last_reply, self.bot)
 
         # update on Tuesday (should update)
         with mock.patch(
@@ -121,6 +158,7 @@ Latest results _2005-01-01_
             with mock.patch('requests.get', fake_get):
                 self.plugin.cron_go('millions.update')
 
+        # assert latest was set and the test user received alert
         self.assertEqual(
             list(self.plugin.iter_data_key_keys('results')),
             [u'latest']
@@ -133,6 +171,22 @@ Latest results _2005-01-01_
                 "stars": "1 11"
             }
         )
+        self.assertReplied(self.bot, u'''\
+Latest results _2005-01-01_
+\U0001F3BE
+*10 19 38 43 46*
+\U00002B50
+*1 11*''')
+
+        # new update without any changes should not trigger any reply
+        self.clear_replies(self.bot)
+        with mock.patch(
+                'time.gmtime',
+                return_value=time.struct_time((2005, 1, 1, 20, 50, 36, 1, 18, 0))
+        ):
+            with mock.patch('requests.get', fake_get):
+                self.plugin.cron_go('millions.update')
+        self.assertRaisesRegexp(AssertionError, 'No replies', self.last_reply, self.bot)
 
     def receive_message(self, text, sender=None, chat=None):
         if sender is None:

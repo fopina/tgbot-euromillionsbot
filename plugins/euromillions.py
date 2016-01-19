@@ -70,7 +70,7 @@ Results for _%s_
 \U0001F3BE
 *%s*
 \U00002B50
-*%s*''' % (text, d['numbers'], d['stars']),
+*%s*''' % (text, d['numbers'], d['stars'])
         else:
             res = 'No results for `%s`...' % text
 
