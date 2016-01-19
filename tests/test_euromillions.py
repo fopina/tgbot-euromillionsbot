@@ -10,7 +10,7 @@ urllib3.disable_warnings()
 class EuromillionsPluginTest(plugintest.PluginTestCase):
     def setUp(self):
         self.plugin = EuromillionsPlugin()
-        self.bot = self.fake_bot('', plugins=[self.plugin])
+        self.bot = self.fake_bot('', plugins=[self.plugin], no_command=self.plugin)
         self.received_id = 1
 
     def test_last(self):
@@ -188,6 +188,24 @@ Latest results _2005-01-01_
                 self.plugin.cron_go('millions.update')
         self.assertRaisesRegexp(AssertionError, 'No replies', self.last_reply, self.bot)
 
+    def test_chat(self):
+        self.plugin.save_data('results', key2='latest', obj={
+            "date": "2005-01-01",
+            "numbers": "hello",
+            "stars": "world"
+        })
+        self.receive_message('Last Results')
+        self.assertReplied(self.bot, u'''\
+Latest results _2005-01-01_
+\U0001F3BE
+*hello*
+\U00002B50
+*world*''')
+        self.receive_message('Enable Alerts')
+        self.assertReplied(self.bot, u'Alerts enabled')
+        self.receive_message('Disable Alerts')
+        self.assertReplied(self.bot, u'Alerts disabled')
+
     def receive_message(self, text, sender=None, chat=None):
         if sender is None:
             sender = {
@@ -197,7 +215,8 @@ Latest results _2005-01-01_
             }
 
         if chat is None:
-            chat = sender
+            chat = {'type': 'private'}
+            chat.update(sender)
 
         self.bot.process_update(
             Update.from_dict({
