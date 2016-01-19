@@ -59,6 +59,28 @@ Results for _2015-01-01_
         self.receive_message('/alertsoff')
         self.assertReplied(self.bot, u'Alerts disabled')
 
+    def test_group_join(self):
+        chat = {
+            'type': 'group',
+            'title': 'test',
+            'id': -1
+        }
+        self.receive_message('', chat=chat, group_chat_created=True)
+        self.assertReplied(self.bot, u'''\
+Thanks for inviting me over!
+
+Use /help to find out what I can do.''')
+
+        self.clear_replies(self.bot)
+        self.receive_message('', chat=chat, new_chat_participant={'id': 2})
+        self.assertRaisesRegexp(AssertionError, 'No replies', self.last_reply, self.bot)
+
+        self.receive_message('', chat=chat, new_chat_participant=self.bot._bot_user.__dict__)
+        self.assertReplied(self.bot, u'''\
+Thanks for inviting me over!
+
+Use /help to find out what I can do.''')
+
     def test_cron_populate(self):
         import mock
         import time
@@ -223,7 +245,7 @@ Results for _2005-01-01_
 \U00002B50
 *world*''')
 
-    def receive_message(self, text, sender=None, chat=None):
+    def receive_message(self, text, sender=None, chat=None, group_chat_created=None, new_chat_participant=None):
         if sender is None:
             sender = {
                 'id': 1,
@@ -243,6 +265,8 @@ Results for _2005-01-01_
                     'text': text,
                     'chat': chat,
                     'from': sender,
+                    'group_chat_created': group_chat_created,
+                    'new_chat_participant': new_chat_participant
                 }
             })
         )
