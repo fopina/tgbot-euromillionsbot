@@ -7,8 +7,9 @@ Euromillions Bot
 */setcommands*
 
 ```
-last - Last Euromillions results
-alerts - Receive an alert when new results are announced
+alerts - receive an alert when new results are announced
+last - last Euromillions results
+random - generate a random key
 results - Euromillions results for a specific date
 ```
 

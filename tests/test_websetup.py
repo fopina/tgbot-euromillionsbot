@@ -64,7 +64,7 @@ class WebTest(plugintest.PluginTestCase):
         self.assertEqual(FakeTelegramBotRPCRequest.QUEUE[-1][0], 'sendMessage')
         self.assertEqual(
             FakeTelegramBotRPCRequest.QUEUE[-1][1]['reply_markup'],
-            '{"resize_keyboard": true, "keyboard": [["Last Results"], ["Previous Results"], ["Enable Alerts"]]}'
+            '{"resize_keyboard": true, "keyboard": [["Last Results"], ["Previous Results"], ["Random Key"], ["Enable Alerts"]]}'
         )
 
     def test_help(self):
@@ -75,9 +75,10 @@ class WebTest(plugintest.PluginTestCase):
         self.assertEqual(FakeTelegramBotRPCRequest.QUEUE[-1][1]['text'], '''\
 You can control me by sending these commands:
 
-/last - last Euromillions results
 /alerts - receive an alert when new results are announced
-/results - euromillions results for a specific date
+/last - last Euromillions results
+/random - generate a random key
+/results - Euromillions results for a specific date
 ''')
 
     def build_update(self, text, sender=None, chat=None, reply_to_message_id=None):

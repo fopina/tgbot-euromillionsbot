@@ -3,6 +3,7 @@ from tgbot.pluginbase import TGPluginBase, TGCommandBase
 from tgbot.tgbot import ChatAction, ReplyKeyboardMarkup, ForceReply, ReplyKeyboardHide, Error
 import requests
 import re
+import random
 
 
 class EuromillionsPlugin(TGPluginBase):
@@ -12,7 +13,8 @@ class EuromillionsPlugin(TGPluginBase):
         return (
             TGCommandBase('last', self.last, 'last Euromillions results'),
             TGCommandBase('alerts', self.alerts, 'receive an alert when new results are announced'),
-            TGCommandBase('results', self.results, 'euromillions results for a specific date'),
+            TGCommandBase('results', self.results, 'Euromillions results for a specific date'),
+            TGCommandBase('random', self.random, 'generate a random key'),
             TGCommandBase('alertson', self.alertson, '', printable=False),
             TGCommandBase('alertsoff', self.alertsoff, '', printable=False),
         )
@@ -23,6 +25,7 @@ class EuromillionsPlugin(TGPluginBase):
                 keyboard=[
                     ['Last Results'],
                     ['Previous Results'],
+                    ['Random Key'],
                     ['Disable Alerts' if self.read_data(chat.id) else 'Enable Alerts'],
                 ],
                 resize_keyboard=True,
@@ -57,6 +60,8 @@ Use /help to find out what I can do.'''
                     parse_mode='Markdown',
                     reply_markup=ReplyKeyboardHide.create()
                 )
+            elif text == 'Random Key':
+                self.random(message, text)
             elif text == 'Enable Alerts':
                 self.alertson(message, text)
             elif text == 'Disable Alerts':
@@ -149,6 +154,21 @@ Use /help to find out what I can do.'''
     def alertsoff(self, message, text):
         self.save_data(message.chat.id, obj=False)
         self.bot.send_message(message.chat.id, 'Alerts disabled', reply_markup=self.build_menu(message.chat))
+
+    def random(self, message, text):
+        numbers = map(str, random.sample(range(1, 51), 5))
+        stars = map(str, random.sample(range(1, 12), 2))
+
+        self.bot.send_message(
+            message.chat.id,
+            u'''\
+Here's a random key for you!
+\U0001F3BE
+*%s*
+\U00002B50
+*%s*''' % (' '.join(numbers), ' '.join(stars)),
+            parse_mode='Markdown'
+        )
 
     def cron_go(self, action, *args):
         if action == 'millions.populate':

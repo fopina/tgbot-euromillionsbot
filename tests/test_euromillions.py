@@ -81,6 +81,15 @@ Thanks for inviting me over!
 
 Use /help to find out what I can do.''')
 
+    def test_random(self):
+        self.receive_message('/random')
+        self.assertRegexpMatches(self.last_reply(self.bot), u'''\
+Here's a random key for you!
+\U0001f3be
+\*\d+ \d+ \d+ \d+ \d+\*
+\u2b50
+\*\d+ \d+\*''')
+
     def test_cron_populate(self):
         import mock
         import time
@@ -244,6 +253,13 @@ Results for _2005-01-01_
 *hello*
 \U00002B50
 *world*''')
+        self.receive_message('Random Key')
+        self.assertRegexpMatches(self.last_reply(self.bot), u'''\
+Here's a random key for you!
+\U0001f3be
+\*\d+ \d+ \d+ \d+ \d+\*
+\u2b50
+\*\d+ \d+\*''')
 
     def receive_message(self, text, sender=None, chat=None, group_chat_created=None, new_chat_participant=None):
         if sender is None:
