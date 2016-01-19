@@ -1,14 +1,18 @@
 # coding=utf-8
 from tgbot.pluginbase import TGPluginBase, TGCommandBase
-from tgbot.tgbot import ChatAction, ReplyKeyboardMarkup
+from tgbot.tgbot import ChatAction, ReplyKeyboardMarkup, ForceReply
 import requests
+import re
 
 
 class EuromillionsPlugin(TGPluginBase):
+    DATE_RE = re.compile(r'\d{4}-\d\d-\d\d')
+
     def list_commands(self):
         return (
-            TGCommandBase('last', self.last, 'Last Euromillions result'),
+            TGCommandBase('last', self.last, 'Last Euromillions results'),
             TGCommandBase('alerts', self.alerts, 'Result alerts'),
+            TGCommandBase('results', self.results, 'Euromillions results for specific date'),
             TGCommandBase('alertson', self.alertson, '', printable=False),
             TGCommandBase('alertsoff', self.alertsoff, '', printable=False),
         )
@@ -35,6 +39,47 @@ class EuromillionsPlugin(TGPluginBase):
         elif text == 'Disable Alerts':
             self.alertsoff(message, text)
 
+    def results(self, message, text):
+        self.bot.send_chat_action(message.chat.id, ChatAction.TEXT)
+        if not text:
+            m = self.bot.send_message(
+                message.chat.id,
+                'For which date?\nPlease use the format `YEAR-MM-DD`',
+                reply_to_message_id=message.message_id,
+                reply_markup=ForceReply.create(selective=True),
+                parse_mode='Markdown'
+            ).wait()
+            self.need_reply(self.results, message, out_message=m, selective=True)
+            return
+
+        if not self.DATE_RE.match(text):
+            m = self.bot.send_message(
+                message.chat.id,
+                'Please *use* the format `YEAR-MM-DD`',
+                reply_to_message_id=message.message_id,
+                reply_markup=ForceReply.create(selective=True),
+                parse_mode='Markdown'
+            ).wait()
+            self.need_reply(self.results, message, out_message=m, selective=True)
+            return
+
+        d = self.read_data('results', text)
+        if d:
+            res = u'''\
+Results for _%s_
+\U0001F3BE
+*%s*
+\U00002B50
+*%s*''' % (text, d['numbers'], d['stars']),
+        else:
+            res = 'No results for `%s`...' % text
+
+        self.bot.send_message(
+            message.chat.id,
+            res,
+            parse_mode='Markdown'
+        ).wait()
+
     def last(self, message, text):
         return self._last(message.chat.id)
 
@@ -51,6 +96,11 @@ Latest results _%s_
 \U00002B50
 *%s*''' % (d['date'], d['numbers'], d['stars']),
                 parse_mode='Markdown'
+            ).wait()
+        else:
+            return self.bot.send_message(
+                chat,
+                'No results sorry...'
             ).wait()
 
     def alerts(self, message, text):
