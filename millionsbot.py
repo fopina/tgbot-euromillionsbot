@@ -27,6 +27,7 @@ https://telegram.me/storebot?start=euromillionsbot
                 start_menu_builder=mp.build_menu,
             ),
         ],
+        inline_query=mp,
         no_command=mp,
         db_url=db_url,
     )

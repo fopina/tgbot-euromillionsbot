@@ -1,6 +1,6 @@
 # coding=utf-8
 from tgbot.pluginbase import TGPluginBase, TGCommandBase
-from tgbot.tgbot import ChatAction, ReplyKeyboardMarkup, ForceReply, ReplyKeyboardHide, Error
+from tgbot.tgbot import ChatAction, ReplyKeyboardMarkup, ForceReply, ReplyKeyboardHide, Error, InlineQueryResultArticle
 import requests
 import random
 from datetime import datetime
@@ -177,6 +177,33 @@ Here's a random key for you!
             parse_mode='Markdown'
         )
 
+    def inline_query(self, inline_query):
+        if not inline_query.query:
+            results = [InlineQueryResultArticle('latest', 'Latest (%s)' % self.read_data('results', 'latest')['date'], self._results(), parse_mode='Markdown')]
+            self.bot.answer_inline_query(inline_query.id, results, cache_time=1)
+        else:
+            results = []
+            try:
+                o = int(inline_query.offset)
+            except:
+                o = 0
+            skip = o
+
+            for x in self._iter_data_key_keys('results'):
+                if x.startswith(inline_query.query):
+                    if skip:
+                        skip -= 1
+                        continue
+                    results.append(InlineQueryResultArticle(
+                        x,
+                        x % self.read_data('results', x),
+                        self._results(x),
+                        parse_mode='Markdown')
+                    )
+                if len(results) >= 20:
+                    break
+            self.bot.answer_inline_query(inline_query.id, results, cache_time=1, next_offset=o + 20)
+
     def cron_go(self, action, *args):
         if action == 'millions.populate':
             return self.cron_populate()
@@ -229,3 +256,11 @@ Here's a random key for you!
                 time_taken = time.time() - time_start
                 if time_taken < 0.5:  # pragma: no cover
                     time.sleep(0.5 - time_taken)
+
+    def _iter_data_key_keys(self, key1=None):
+        for d in self.bot.models.PluginData.select(self.bot.models.PluginData.k2).where(
+            self.bot.models.PluginData.name == self.key_name,
+            self.bot.models.PluginData.k1 == key1,
+            self.bot.models.PluginData.data != None,  # noqa: do not change to "is not", peewee operator
+        ).order_by(-self.bot.models.PluginData.k2):
+            yield d.k2
