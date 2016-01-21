@@ -9,7 +9,12 @@ urllib3.disable_warnings()
 class PluginTest(plugintest.PluginTestCase):
     def setUp(self):
         self.plugin = EuromillionsPlugin()
-        self.bot = self.fake_bot('', plugins=[self.plugin], no_command=self.plugin)
+        self.bot = self.fake_bot(
+            '',
+            plugins=[self.plugin],
+            inline_query=self.plugin,
+            no_command=self.plugin
+        )
 
     def test_last(self):
         self.receive_message('/last')
@@ -259,3 +264,49 @@ Here's a random key for you!
 \*\d+ \d+ \d+ \d+ \d+\*
 \u2b50
 \*\d+ \d+\*''')
+
+    def test_inline(self):
+        for m in xrange(13):
+            for d in xrange(1, 29, 3):
+                self.plugin.save_data('results', key2='2005-%02d-%02d' % (m, d), obj={
+                    "numbers": "hello",
+                    "stars": "2005-%02d-%02d" % (m, d)
+                })
+
+        self.plugin.save_data('results', key2='latest', obj={
+            "date": "2005-12-28",
+            "numbers": "hello",
+            "stars": "2005-12-28"
+        })
+
+        self.receive_inline('')
+        results = self.pop_reply()[1]['results']
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]['title'], u'Latest (2005-12-28)')
+        self.assertEqual(results[0]['message_text'], u'''\
+Latest Results for _2005-12-28_
+\U0001F3BE
+*hello*
+\U00002B50
+*2005-12-28*''')
+
+        self.receive_inline('2')
+        reply = self.pop_reply()[1]
+        results = reply['results']
+        self.assertEqual(len(results), 20)
+        self.assertEqual(reply['next_offset'], 20)
+        self.assertEqual(results[0]['title'], u'2005-12-28')
+
+        self.receive_inline('2', offset=20)
+        reply = self.pop_reply()[1]
+        results = reply['results']
+        self.assertEqual(len(results), 20)
+        self.assertEqual(reply['next_offset'], 40)
+        self.assertEqual(results[0]['title'], u'2005-10-28')
+
+        self.receive_inline('2005-01')
+        reply = self.pop_reply()[1]
+        results = reply['results']
+        self.assertEqual(len(results), 10)
+        self.assertNotIn('next_offset', reply)
+        self.assertEqual(results[0]['title'], u'2005-01-28')
