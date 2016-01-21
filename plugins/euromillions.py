@@ -8,7 +8,6 @@ from datetime import datetime
 
 class EuromillionsPlugin(TGPluginBase):
     DATE_MASK = '%Y-%M-%d'
-    INLINE_CACHE_TIME = 300
 
     def list_commands(self):
         return (
@@ -109,6 +108,9 @@ Use /help to find out what I can do.'''
             ).wait()
             self.need_reply(self.results, message, out_message=m, selective=True)
 
+    def _short_results(self, entry='latest'):
+        return u'\U0001F3BE %(numbers)s \U00002B50 %(stars)s' % self.read_data('results', entry)
+
     def _results(self, entry='latest'):
         if entry != 'latest':
             # let the parsing exception go...
@@ -180,8 +182,14 @@ Here's a random key for you!
 
     def inline_query(self, inline_query):
         if not inline_query.query:
-            results = [InlineQueryResultArticle('latest', 'Latest (%s)' % self.read_data('results', 'latest')['date'], self._results(), parse_mode='Markdown')]
-            self.bot.answer_inline_query(inline_query.id, results, cache_time=self.INLINE_CACHE_TIME)
+            results = [InlineQueryResultArticle(
+                'latest',
+                u'\U00002B50 Latest (%s)' % self.read_data('results', 'latest')['date'],
+                self._results(),
+                description=self._short_results(),
+                parse_mode='Markdown'
+            )]
+            self.bot.answer_inline_query(inline_query.id, results, cache_time=300)
         else:
             results = []
             try:
@@ -196,8 +204,9 @@ Here's a random key for you!
                     continue
                 results.append(InlineQueryResultArticle(
                     x,
-                    x % self.read_data('results', x),
+                    u'\U00002B50 ' + x,
                     self._results(x),
+                    description=self._short_results(x),
                     parse_mode='Markdown')
                 )
                 if len(results) >= 20:
@@ -206,7 +215,7 @@ Here's a random key for you!
             self.bot.answer_inline_query(
                 inline_query.id,
                 results,
-                cache_time=self.INLINE_CACHE_TIME,
+                cache_time=3600,
                 next_offset=None if len(results) < 20 else o + 20
             )
 

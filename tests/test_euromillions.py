@@ -282,7 +282,8 @@ Here's a random key for you!
         self.receive_inline('')
         results = self.pop_reply()[1]['results']
         self.assertEqual(len(results), 1)
-        self.assertEqual(results[0]['title'], u'Latest (2005-12-28)')
+        self.assertEqual(results[0]['title'], u'\U00002B50 Latest (2005-12-28)')
+        self.assertEqual(results[0]['description'], u'\U0001F3BE hello \U00002B50 2005-12-28')
         self.assertEqual(results[0]['message_text'], u'''\
 Latest Results for _2005-12-28_
 \U0001F3BE
@@ -295,18 +296,19 @@ Latest Results for _2005-12-28_
         results = reply['results']
         self.assertEqual(len(results), 20)
         self.assertEqual(reply['next_offset'], 20)
-        self.assertEqual(results[0]['title'], u'2005-12-28')
+        self.assertEqual(results[0]['title'], u'\U00002B50 2005-12-28')
+        self.assertEqual(results[0]['description'], u'\U0001F3BE hello \U00002B50 2005-12-28')
 
         self.receive_inline('2', offset=20)
         reply = self.pop_reply()[1]
         results = reply['results']
         self.assertEqual(len(results), 20)
         self.assertEqual(reply['next_offset'], 40)
-        self.assertEqual(results[0]['title'], u'2005-10-28')
+        self.assertEqual(results[0]['title'], u'\U00002B50 2005-10-28')
 
         self.receive_inline('2005-01')
         reply = self.pop_reply()[1]
         results = reply['results']
         self.assertEqual(len(results), 10)
         self.assertNotIn('next_offset', reply)
-        self.assertEqual(results[0]['title'], u'2005-01-28')
+        self.assertEqual(results[0]['title'], u'\U00002B50 2005-01-28')
