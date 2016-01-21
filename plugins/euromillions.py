@@ -200,8 +200,8 @@ Here's a random key for you!
         import time
 
         # do nothing if not Tuesday nor Friday
-        wday = time.gmtime().tm_wday
-        if wday not in [1, 4]:
+        gmtime = time.gmtime()
+        if gmtime.tm_wday not in [1, 4] or gmtime.tm_hour < 20:
             return
 
         r = requests.get('https://nunofcguerreiro.com/api-euromillions-json')
