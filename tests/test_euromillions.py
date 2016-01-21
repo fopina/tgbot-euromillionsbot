@@ -74,7 +74,7 @@ Thanks for inviting me over!
 Use /help to find out what I can do.''')
 
         self.clear_replies(self.bot)
-        self.receive_message('', chat=chat, new_chat_participant={'id': 2})
+        self.receive_message('', chat=chat, new_chat_participant={'id': 2, 'first_name': 'Paul'})
         self.assertRaisesRegexp(AssertionError, 'No replies', self.last_reply, self.bot)
 
         self.receive_message('', chat=chat, new_chat_participant=self.bot._bot_user.__dict__)

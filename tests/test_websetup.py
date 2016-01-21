@@ -75,10 +75,10 @@ class WebTest(plugintest.PluginTestCase):
         self.assertEqual(FakeTelegramBotRPCRequest.QUEUE[-1][1]['text'], '''\
 You can control me by sending these commands:
 
-/alerts - receive an alert when new results are announced
 /last - last Euromillions results
-/random - generate a random key
+/alerts - receive an alert when new results are announced
 /results - Euromillions results for a specific date
+/random - generate a random key
 ''')
 
     def build_update(self, text, sender=None, chat=None, reply_to_message_id=None):
