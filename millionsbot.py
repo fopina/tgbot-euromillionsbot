@@ -20,6 +20,8 @@ Use the options in the menu.
 
 If you enable alerts, I'll update you when new results are announced.
 
+I also support inline queries so you can easily tell other people the results by typing @euromillionsbot in that chat!
+
 _Do not forget to rate me!_
 https://telegram.me/storebot?start=euromillionsbot
             ''',
