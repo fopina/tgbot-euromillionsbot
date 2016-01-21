@@ -32,3 +32,9 @@ Now, hit "Start" to start using it.
 */setuserpic*
 
 userpic.jpg
+
+*/setinline*
+
+```
+date (YEAR-MM-DD)
+```
