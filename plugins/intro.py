@@ -23,7 +23,7 @@ class IntroPlugin(TGPluginBase):
             if ck.printable:
                 msg += '/%s\n' % ck
 
-        self.bot.send_message(message.chat.id, msg)
+        return self.bot.return_message(message.chat.id, msg)
 
     def start(self, message, text):
         keyb = None
@@ -31,7 +31,7 @@ class IntroPlugin(TGPluginBase):
         if self._start_menu_builder:
             keyb = self._start_menu_builder(message.chat)
 
-        self.bot.send_message(
+        return self.bot.return_message(
             message.chat.id,
             self._text,
             parse_mode='Markdown' if self._use_markdown else None,

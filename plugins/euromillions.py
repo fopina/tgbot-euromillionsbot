@@ -41,38 +41,37 @@ class EuromillionsPlugin(TGPluginBase):
                 )
             )
         ):
-            self.bot.send_message(
+            return self.bot.return_message(
                 message.chat.id,
                 '''\
 Thanks for inviting me over!
 
 Use /help to find out what I can do.'''
             )
-            return
 
         if message.chat.type == 'private':
             if text == 'Last Results':
                 self._last(message.chat)
             elif text == 'Previous Results':
-                self.bot.send_message(
+                return self.bot.return_message(
                     message.chat.id,
                     'Please enter the date in the format `YEAR-MM-DD`',
                     parse_mode='Markdown',
                     reply_markup=ReplyKeyboardHide.create()
                 )
             elif text == 'Random Key':
-                self.random(message, text)
+                return self.random(message, text)
             elif text == 'Enable Alerts':
-                self.alertson(message, text)
+                return self.alertson(message, text)
             elif text == 'Disable Alerts':
-                self.alertsoff(message, text)
+                return self.alertsoff(message, text)
             elif text:
                 res = 'Please *use* the format `YEAR-MM-DD`'
                 try:
                     res = self._results(text)
                 except:
                     pass
-                self.bot.send_message(
+                return self.bot.return_message(
                     message.chat.id,
                     res,
                     parse_mode='Markdown',
@@ -93,7 +92,7 @@ Use /help to find out what I can do.'''
             return
 
         try:
-            self.bot.send_message(
+            return self.bot.return_message(
                 message.chat.id,
                 self._results(text),
                 parse_mode='Markdown'
@@ -140,7 +139,7 @@ Use /help to find out what I can do.'''
         )
 
     def last(self, message, text):
-        return self._last(message.chat.id)
+        self._last(message.chat.id)
 
     def _last(self, chat):
         self.bot.send_chat_action(chat, ChatAction.TEXT)
@@ -159,17 +158,17 @@ Use /help to find out what I can do.'''
 
     def alertson(self, message, text):
         self.save_data(message.chat.id, obj=True)
-        self.bot.send_message(message.chat.id, 'Alerts enabled', reply_markup=self.build_menu(message.chat))
+        return self.bot.return_message(message.chat.id, 'Alerts enabled', reply_markup=self.build_menu(message.chat))
 
     def alertsoff(self, message, text):
         self.save_data(message.chat.id, obj=False)
-        self.bot.send_message(message.chat.id, 'Alerts disabled', reply_markup=self.build_menu(message.chat))
+        return self.bot.return_message(message.chat.id, 'Alerts disabled', reply_markup=self.build_menu(message.chat))
 
     def random(self, message, text):
         numbers = map(str, random.sample(range(1, 51), 5))
         stars = map(str, random.sample(range(1, 12), 2))
 
-        self.bot.send_message(
+        return self.bot.return_message(
             message.chat.id,
             u'''\
 Here's a random key for you!
