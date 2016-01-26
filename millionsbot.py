@@ -4,8 +4,6 @@
 import tgbot
 from plugins import euromillions, intro
 import argparse
-from requests.packages import urllib3
-urllib3.disable_warnings()
 
 
 def setup(db_url=None, token=None):
