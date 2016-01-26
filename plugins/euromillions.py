@@ -88,7 +88,10 @@ Use /help to find out what I can do.'''
                 reply_markup=ForceReply.create(selective=True),
                 parse_mode='Markdown'
             ).wait()
-            self.need_reply(self.results, message, out_message=m, selective=True)
+            if isinstance(m, Error):
+                print 'ERROR:', m
+            else:
+                self.need_reply(self.results, message, out_message=m, selective=True)
             return
 
         try:
@@ -105,7 +108,10 @@ Use /help to find out what I can do.'''
                 reply_markup=ForceReply.create(selective=True),
                 parse_mode='Markdown'
             ).wait()
-            self.need_reply(self.results, message, out_message=m, selective=True)
+            if isinstance(m, Error):
+                print 'ERROR:', m
+            else:
+                self.need_reply(self.results, message, out_message=m, selective=True)
 
     def _short_results(self, entry='latest'):
         return u'\U0001F3BE %(numbers)s \U00002B50 %(stars)s' % self.read_data('results', entry)
