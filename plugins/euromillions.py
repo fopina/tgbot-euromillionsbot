@@ -140,7 +140,7 @@ Use /help to find out what I can do.'''
 *%s*''' % (
             'Latest ' if entry == 'latest' else '',
             dt,
-            d['numbers'],
+            d.get('balls', d.get('numbers')),
             d['stars']
         )
 
